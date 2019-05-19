@@ -9,11 +9,9 @@ import skimage.io
 import matplotlib
 import matplotlib.pyplot as plt
 from scipy import ndimage, misc
+import cv2
 
-
-
-
-image = skimage.io.imread("./fig01.jpeg").astype("int32")
+image = skimage.io.imread(sys.argv[1]).astype("int32")
 
 ROOT_DIR = os.path.abspath("./")
 sys.path.append(ROOT_DIR)
@@ -70,29 +68,42 @@ r = results[0]
 
 masks = r["masks"]
 
+def get_dominant_color(img):
+    pixels = np.float32(img.reshape(-1, 3))
+
+    n_colors = 5
+    criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 200, .1)
+    flags = cv2.KMEANS_RANDOM_CENTERS
+
+    _, labels, palette = cv2.kmeans(pixels, n_colors, None, criteria, 10, flags)
+    _, counts = np.unique(labels, return_counts=True)
+    return palette[np.argmax(counts)]
+
 def delete_masks(img, masks):
+    dom_col = get_dominant_color(img)
     for k in range(masks.shape[-1]):
         mask =  r["masks"][:,:,k]
         for c in range(3):
-            img[:,:,c] = np.where(mask == 1,
-                                               np.zeros(masked_and_filteredx[:,:,c].shape),
-                                               img[:,:,c])
+            img[:,:,c] = np.where(mask == 1, dom_col[c]*np.ones(img[:,:,c].shape), img[:,:,c])
     return img
 
 fig = plt.figure()
-ax1 = fig.add_subplot(221)
-ax2 = fig.add_subplot(222)
-ax3 = fig.add_subplot(223)
-ax4 = fig.add_subplot(224)
+ax1 = fig.add_subplot(321)
+ax2 = fig.add_subplot(322)
+ax3 = fig.add_subplot(323)
+ax4 = fig.add_subplot(324)
+ax5 = fig.add_subplot(325)
+ax6 = fig.add_subplot(326)
+
 filteredx = ndimage.sobel(image, 0)
 filteredy = ndimage.sobel(image, 1)
 ax1.imshow(image)
-visualize.display_instances(image, r['rois'], r['masks'], r['class_ids'], 
+visualize.display_instances(image, r['rois'], r['masks'], r['class_ids'],
                              class_names, r['scores'], ax=ax2)
 filteredx = delete_masks(filteredx, masks)
 filteredy = delete_masks(filteredy, masks)
 ax3.imshow(filteredx)
 ax4.imshow(filteredy)
-
+ax5.imshow(delete_masks(image,masks))
+plt.imsave('warped.png',delete_masks(image,masks))
 plt.show()
-
