@@ -1,21 +1,73 @@
+import os
 import sys
 from skimage import filters, morphology, feature
 from skimage.transform import (hough_line, hough_line_peaks,
-                               probabilistic_hough_line)    
+                               probabilistic_hough_line)
 from PIL import Image
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import cm
+import skimage.io
+import matplotlib
+import matplotlib.pyplot as plt
+from scipy import ndimage, misc
 
-scale = lambda arr,min,max: min + (max-min)*(arr-np.min(arr))/(np.max(arr)-np.min(arr))
-get_s = lambda arr: Image.fromarray(scale(arr,0,255))
+ROOT_DIR = os.path.abspath("./")
+sys.path.append(ROOT_DIR)
+from mrcnn import utils
+import mrcnn.model as modellib
+from mrcnn import visualize
+sys.path.append(os.path.join(ROOT_DIR, "coco/"))
+import coco
+# Directory to save logs and trained model
+MODEL_DIR = os.path.join(ROOT_DIR, "logs")
+
+# Local path to trained weights file
+COCO_MODEL_PATH = os.path.join(ROOT_DIR, "mask_rcnn_coco.h5")
+# Download COCO trained weights from Releases if needed
+if not os.path.exists(COCO_MODEL_PATH):
+    utils.download_trained_weights(COCO_MODEL_PATH)
+
+class InferenceConfig(coco.CocoConfig):
+    # Set batch size to 1 since we'll be running inference on
+    # one image at a time. Batch size = GPU_COUNT * IMAGES_PER_GPU
+    GPU_COUNT = 1
+    DETECTION_MAX_INSTANCES = 200
+    DETECTION_MIN_CONFIDENCE = 0.35
+    IMAGES_PER_GPU = 1
+
+config = InferenceConfig()
+# Create model object in inference mode.
+model = modellib.MaskRCNN(mode="inference", model_dir=MODEL_DIR, config=config)
+
+# Load weights trained on MS-COCO
+model.load_weights(COCO_MODEL_PATH, by_name=True)
+
 get = lambda arr: Image.fromarray(arr)
-im = 1*np.array(Image.open(sys.argv[1]).convert('L'))
-edge_im = (feature.canny(im,sigma=2)).astype(int)
-#get(im).show()
-#get_s(edge_im).show()
 
+def delete_masks(img, masks):
+    for k in range(masks.shape[-1]):
+        mask =  r["masks"][:,:,k]
+        img = np.where(mask == 1, np.zeros(img.shape), img)
+    return img
+
+im = np.array(Image.open(sys.argv[1]))
+get(im).show()
+gray = np.array(Image.open(sys.argv[1]).convert("L"))
+
+results = model.detect([im])
+r = results[0]
+
+masks = r["masks"]
+
+edge_im = np.uint8(255*filters.sobel(gray))
+#get(edge_im).show()
+#get_s(edge_im).show()
+edge_im = delete_masks(edge_im,masks)
+#edge_im = filters.gaussian(edge_im, sigma=1.5)
+get(edge_im).show()
 image = edge_im
+"""
 # Classic straight-line Hough transform
 h, theta, d = hough_line(image)
 
@@ -47,10 +99,11 @@ ax[2].set_title('Detected lines')
 
 plt.tight_layout()
 plt.show()
-
-# Line finding using the Probabilistic Hough Transform
-image = data.camera()
-edges = canny(image, 2, 1, 25)
+"""
+edge_im = filters.gaussian(edge_im,sigma=2)
+edges = np.uint8(filters.laplace(edge_im,ksize=5))
+edges = filters.gaussian(edges,sigma=2)
+edges = np.uint8(morphology.skeletonize_3d(edges))
 lines = probabilistic_hough_line(edges, threshold=10, line_length=5,
                                  line_gap=3)
 
@@ -62,9 +115,10 @@ ax[0].imshow(image, cmap=cm.gray)
 ax[0].set_title('Input image')
 
 ax[1].imshow(edges, cmap=cm.gray)
-ax[1].set_title('Canny edges')
+ax[1].set_title('Laplace edges')
 
 ax[2].imshow(edges * 0)
+print(lines[0])
 for line in lines:
     p0, p1 = line
     ax[2].plot((p0[0], p1[0]), (p0[1], p1[1]))
