@@ -1,5 +1,7 @@
+#!/bin/python
 import os
 import sys
+ROOT_DIR = os.path.abspath("./")
 import random
 import math
 import numpy as np
@@ -15,11 +17,10 @@ from PIL import Image
 from matplotlib import cm
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.figure import Figure
-
-from rectification import rectify_image
+sys.path.append(os.path.join(ROOT_DIR, "Image-rectification/"))
+from ImageRectification.rectification import rectify_image
 from image_transform import pre_process
 
-ROOT_DIR = os.path.abspath("./")
 sys.path.append(ROOT_DIR)
 from mrcnn import utils
 import mrcnn.model as modellib
@@ -76,7 +77,11 @@ def delete_masks(img, masks):
 
 print('Reading Image...')
 im = io.imread(sys.argv[1]).astype("int32")
-
+fig = plt.figure()
+ax1 = fig.add_subplot(221)
+ax2 = fig.add_subplot(222)
+ax3 = fig.add_subplot(223)
+ax4 = fig.add_subplot(224)
 print('Detecting objects and masking them...')
 results = model.detect([im], verbose=1)
 r = results[0]
@@ -87,45 +92,12 @@ im_without_cars = delete_masks(im,masks)
 print('Pre-processing masked image...')
 print(im_without_cars.shape)
 proc_im, thr_proc_im = pre_process(im_without_cars)
+
 print(proc_im.shape,thr_proc_im.shape)
 print('Rectifying perspective of image')
 final_im = rectify_image(proc_im, 4, algorithm='independent')
-#io.imshow(final_im)
-#plt.show()
-image = final_im
-
-# Classic straight-line Hough transform
-h, theta, d = hough_line(image)
-
-# Generating figure 1
-fig, axes = plt.subplots(1, 3, figsize=(15, 6))
-ax = axes.ravel()
-
-ax[0].imshow(image, cmap=cm.gray)
-ax[0].set_title('Input image')
-ax[0].set_axis_off()
-
-ax[1].imshow(np.log(1 + h),
-             extent=[np.rad2deg(theta[-1]), np.rad2deg(theta[0]), d[-1], d[0]],
-             cmap=cm.gray, aspect=1/1.5)
-ax[1].set_title('Hough transform')
-ax[1].set_xlabel('Angles (degrees)')
-ax[1].set_ylabel('Distance (pixels)')
-ax[1].axis('image')
-ax[2].imshow(image, cmap=cm.gray)
-
-for _, angle, dist in zip(*hough_line_peaks(h, theta, d)):
-    y0 = (dist - 0 * np.cos(angle)) / np.sin(angle)
-    y1 = (dist - image.shape[1] * np.cos(angle)) / np.sin(angle)
-    slope = abs(np.arctan((y1)/y0)*180/np.pi)
-    if 75 <= slope <= 90:
-        print(slope)
-        ax[2].plot((0, image.shape[1]), (y0, y1), '-r')
-
-ax[2].set_xlim((0, image.shape[1]))
-ax[2].set_ylim((image.shape[0], 0))
-ax[2].set_axis_off()
-ax[2].set_title('Detected lines')
-
-plt.tight_layout()
+ax1.imshow(im)
+ax2.imshow(im_without_cars)
+ax3.imshow(final_im)
+ax4.imshow(thr_proc_im)
 plt.show()

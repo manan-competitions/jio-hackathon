@@ -4,10 +4,6 @@ from skimage.transform import (hough_line, hough_line_peaks,
                                probabilistic_hough_line)
 from PIL import Image
 import numpy as np
-import matplotlib.pyplot as plt
-from matplotlib import cm
-from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
-from matplotlib.figure import Figure
 
 scale = lambda arr,m,M: m + (M-m)*(arr-np.min(arr))/(np.max(arr)-np.min(arr))
 # lambda function get a PIL image from an array
@@ -19,13 +15,13 @@ def pre_process(im):
 #    get(edge_im).show()
     #edge_im = np.uint8(255*filters.sobel(edge_im))
     edge_im = filters.gaussian(edge_im,sigma=1)
-    get(edge_im).show()
-    edges = edge_im
+    # get(edge_im).show()
+    edges = np.copy(edge_im)
 #    get(edges).convert('RGB').save('warped.jpg')
     thr = filters.threshold_otsu(edges)
     edges[np.where(edges>=thr)] = 1
     edges[np.where(edges<thr)] = 0
     #edges = np.uint8(255*morphology.skeletonize_3d(edges))
-    get(edges).show()
+    # get(edges).show()
 #    get(edges).convert('RGB').save('warped_2.jpg')
     return edge_im, edges
