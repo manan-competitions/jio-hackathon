@@ -4,10 +4,6 @@ from skimage.transform import (hough_line, hough_line_peaks,
                                probabilistic_hough_line)
 from PIL import Image
 import numpy as np
-import matplotlib.pyplot as plt
-from matplotlib import cm
-from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
-from matplotlib.figure import Figure
 
 scale = lambda arr,m,M: m + (M-m)*(arr-np.min(arr))/(np.max(arr)-np.min(arr))
 # lambda function get a PIL image from an array

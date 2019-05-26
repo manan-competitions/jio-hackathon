@@ -1,5 +1,7 @@
+#!/bin/python
 import os
 import sys
+ROOT_DIR = os.path.abspath("./")
 import random
 import math
 import numpy as np
@@ -15,11 +17,10 @@ from PIL import Image
 from matplotlib import cm
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.figure import Figure
-
-from rectification import rectify_image
+sys.path.append(os.path.join(ROOT_DIR, "Image-rectification/"))
+from ImageRectification.rectification import rectify_image
 from image_transform import pre_process
 
-ROOT_DIR = os.path.abspath("./")
 sys.path.append(ROOT_DIR)
 from mrcnn import utils
 import mrcnn.model as modellib
