@@ -75,7 +75,11 @@ def delete_masks(img, masks):
 
 print('Reading Image...')
 im = io.imread(sys.argv[1]).astype("int32")
-
+fig = plt.figure()
+ax1 = fig.add_subplot(221)
+ax2 = fig.add_subplot(222)
+ax3 = fig.add_subplot(223)
+ax4 = fig.add_subplot(224)
 print('Detecting objects and masking them...')
 results = model.detect([im], verbose=1)
 r = results[0]
@@ -86,8 +90,12 @@ im_without_cars = delete_masks(im,masks)
 print('Pre-processing masked image...')
 print(im_without_cars.shape)
 proc_im, thr_proc_im = pre_process(im_without_cars)
+
 print(proc_im.shape,thr_proc_im.shape)
 print('Rectifying perspective of image')
 final_im = rectify_image(proc_im, 4, algorithm='independent')
-io.imshow(final_im)
+ax1.imshow(im)
+ax2.imshow(im_without_cars)
+ax3.imshow(final_im)
+ax4.imshow(thr_proc_im)
 plt.show()
