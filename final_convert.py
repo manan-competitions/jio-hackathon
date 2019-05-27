@@ -19,7 +19,7 @@ from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.figure import Figure
 sys.path.append(os.path.join(ROOT_DIR, "Image-rectification/"))
 from ImageRectification.rectification import rectify_image
-from image_transform import pre_process
+from image_transform import pre_process, show_hsv, visualize_hsv
 
 sys.path.append(ROOT_DIR)
 from mrcnn import utils
@@ -64,6 +64,7 @@ def get_dominant_color(img):
     return palette[np.argmax(counts)]
 
 def delete_masks(img, masks):
+    img = np.copy(img)
     dom_col = get_dominant_color(img)
     for k in range(masks.shape[-1]):
         mask =  r["masks"][:,:,k]
@@ -97,7 +98,23 @@ print(proc_im.shape,thr_proc_im.shape)
 print('Rectifying perspective of image')
 final_im = rectify_image(proc_im, 4, algorithm='independent')
 ax1.imshow(im)
+ax1.set_title("Initial Image")
+ax1.axis('off')
 ax2.imshow(im_without_cars)
-ax3.imshow(final_im)
-ax4.imshow(thr_proc_im)
+ax2.set_title("Masked Images")
+ax2.axis('off')
+ax3.imshow(thr_proc_im)
+ax3.set_title("Filtered and Proccessed Image")
+ax3.axis('off')
+ax4.imshow(final_im)
+ax4.set_title("Birds Eye View")
+ax4.axis('off')
+
 plt.show()
+plt.imshow(final_im)
+plt.show()
+# Uncomment for additional visualizations
+#
+#
+# show_hsv(im)
+# visualize_hsv(im)
