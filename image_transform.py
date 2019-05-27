@@ -5,6 +5,9 @@ from skimage.transform import (hough_line, hough_line_peaks,
 
 from PIL import Image
 import numpy as np
+from mpl_toolkits.mplot3d import Axes3D
+from matplotlib import cm
+from matplotlib import colors
 
 scale = lambda arr,m,M: m + (M-m)*(arr-np.min(arr))/(np.max(arr)-np.min(arr))
 # lambda function get a PIL image from an array
