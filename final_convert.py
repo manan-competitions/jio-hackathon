@@ -18,13 +18,10 @@ from matplotlib import cm
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.figure import Figure
 sys.path.append(os.path.join(ROOT_DIR, "Image-rectification/"))
-<<<<<<< HEAD
 from ImageRectification.rectification import rectify_image
 from image_transform import pre_process, show_hsv, visualize_hsv
-=======
 from rectification import rectify_image
 from image_transform import pre_process
->>>>>>> 49243ba799410da687d3476ec16c01f629cd056a
 
 sys.path.append(ROOT_DIR)
 from mrcnn import utils
