@@ -18,7 +18,7 @@ from matplotlib import cm
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.figure import Figure
 sys.path.append(os.path.join(ROOT_DIR, "Image-rectification/"))
-from ImageRectification.rectification import rectify_image
+from rectification import rectify_image
 from image_transform import pre_process
 
 sys.path.append(ROOT_DIR)
@@ -43,6 +43,11 @@ class InferenceConfig(coco.CocoConfig):
     DETECTION_MAX_INSTANCES = 200
     DETECTION_MIN_CONFIDENCE = 0.35
     IMAGES_PER_GPU = 1
+
+# lambda function to scale an array to [min,max]
+scale = lambda arr,min,max: min + (max-min)*(arr-np.min(arr))/(np.max(arr)-np.min(arr))
+# lambda function get a PIL image from an array
+get = lambda arr: Image.fromarray(np.uint8(scale(arr,0,255)))
 
 print('Loading mask RCNN model...')
 config = InferenceConfig()
@@ -95,9 +100,14 @@ proc_im, thr_proc_im = pre_process(im_without_cars)
 
 print(proc_im.shape,thr_proc_im.shape)
 print('Rectifying perspective of image')
-final_im = rectify_image(proc_im, 4, algorithm='independent')
-ax1.imshow(im)
-ax2.imshow(im_without_cars)
-ax3.imshow(final_im)
-ax4.imshow(thr_proc_im)
-plt.show()
+final_im = rectify_image(thr_proc_im, 4, algorithm='independent')
+#ax1.imshow(im)
+#ax2.imshow(im_without_cars)
+#ax3.imshow(final_im,cmap='gray')
+#ax4.imshow(thr_proc_im,cmap='gray')
+
+#ax1.imsave(im,)
+#get(im_without_cars).show()
+get(final_im).show()
+#get(thr_proc_im).show()
+#plt.show()
